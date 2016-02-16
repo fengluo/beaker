@@ -3,7 +3,7 @@ import inspect
 from werkzeug.wrappers import Request
 from werkzeug.routing import Map
 
-from .view import View
+from .resource import Resource
 
 
 def import_all_module(name, modules=None):
@@ -26,8 +26,8 @@ class App(object):
         self.views = []
         for module in modules:
             for k, v in module.__dict__.items():
-                if inspect.isclass(v) and issubclass(v, View)\
-                        and v is not View:
+                if inspect.isclass(v) and issubclass(v, Resource)\
+                        and v is not Resource:
                     self.rules.extend(v.rules)
                     if module not in self.views:
                         self.views.append(module)

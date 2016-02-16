@@ -1,2 +1,5 @@
+
+__version__ = '0.1.0'
+
 from app import App
-from view import View
+from resource import Resource

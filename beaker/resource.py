@@ -1,19 +1,20 @@
+import json
 from werkzeug.routing import Rule
-from werkzeug.wrappers import Request
+from werkzeug.wrappers import Request, Response
 
-__all__ = ['View']
+__all__ = ['Resource']
 
 
-class ViewMetaClass(type):
+class ResourceMetaClass(type):
     def __new__(cls, name, bases, attrs):
-        if name == 'View':
+        if name == 'Resource':
             return type.__new__(cls, name, bases, attrs)
         attrs['rules'] = [
             Rule('/{}s'.format(name.lower()), endpoint=name),
             Rule(
                 '/{}s/<{}_id>'.format(name.lower(), name.lower()),
                 endpoint=name)]
-        if bases[0].__name__ is not 'View':
+        if bases[0].__name__ is not 'Resource':
             attrs['rules'] = [
                 Rule('/{}s/<{}_id>/{}s'.format(
                     bases[0].__name__.lower(),
@@ -26,13 +27,13 @@ class ViewMetaClass(type):
         return type.__new__(cls, name, bases, attrs)
 
 
-class View(object):
+class Resource(object):
     """docstring for Home"""
 
-    __metaclass__ = ViewMetaClass
+    __metaclass__ = ResourceMetaClass
 
     def __init__(self, request, endpoint, values):
-        super(View, self).__init__()
+        super(Resource, self).__init__()
         self.request = request
         self.endpoint = endpoint
         self.values = values
@@ -51,10 +52,14 @@ class View(object):
         if request.method.lower() == 'post'\
                 and resource_id not in self.values.keys():
             return getattr(self, 'save', None)(**self.values)
-        return getattr(
+        resp = getattr(
             self,
             func_method_map.get(request.method.lower()),
             None)(**self.values)
+        if isinstance(resp, Response):
+            return resp
+        elif isinstance(resp, dict):
+            return Response(json.dumps(resp))
 
     def __call__(self, environ, start_response):
         request = Request(environ)

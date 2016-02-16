@@ -1,9 +1,9 @@
 
 from werkzeug.wrappers import Response
-from sample.beaker import View
+from sample.beaker import Resource
 
 
-class Post(View):
+class Post(Resource):
 
     def query(self):
         return Response('Hello query')
