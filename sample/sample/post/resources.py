@@ -5,6 +5,8 @@ from sample.beaker import Resource
 
 class Post(Resource):
 
+    __resource__ = 'post'
+
     def query(self):
         return Response('Hello query')
 

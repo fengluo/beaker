@@ -9,20 +9,31 @@ class ResourceMetaClass(type):
     def __new__(cls, name, bases, attrs):
         if name == 'Resource':
             return type.__new__(cls, name, bases, attrs)
+        if not attrs.get('__resource__'):
+            attrs['__resource__'] = '{}s'.format(name.lower())
+        if not attrs.get('__resource_id__'):
+            attrs['__resource_id__'] = '{}_id'.format(name.lower())
+
         attrs['rules'] = [
-            Rule('/{}s'.format(name.lower()), endpoint=name),
             Rule(
-                '/{}s/<{}_id>'.format(name.lower(), name.lower()),
+                '/{}/<{}>'.format(
+                    attrs['__resource__'], attrs['__resource_id__']),
                 endpoint=name)]
-        if bases[0].__name__ is not 'Resource':
-            attrs['rules'] = [
-                Rule('/{}s/<{}_id>/{}s'.format(
-                    bases[0].__name__.lower(),
-                    bases[0].__name__.lower(),
-                    name.lower()), endpoint=name),
-                Rule(
-                    '/{}s/<{}_id>'.format(name.lower(), name.lower()),
-                    endpoint=name)]
+
+        parent_resource = next(
+            (base for base in bases
+                if isinstance(base, cls) and base.__name__ is not 'Resource'),
+            None)
+
+        if parent_resource:
+            attrs['rules'].append(
+                Rule('/{}/<{}>/{}'.format(
+                    parent_resource.__resource__,
+                    parent_resource.__resource_id__,
+                    attrs['__resource__']), endpoint=name))
+        else:
+            attrs['rules'].append(
+                Rule('/{}'.format(attrs['__resource__']), endpoint=name))
 
         return type.__new__(cls, name, bases, attrs)
 
@@ -45,12 +56,11 @@ class Resource(object):
             'delete': 'delete'
         }
 
-        resource_id = '{}_id'.format(self.__class__.__name__.lower())
         if request.method.lower() == 'get'\
-                and resource_id not in self.values.keys():
+                and self.__resource_id__ not in self.values.keys():
             return getattr(self, 'query', None)(**self.values)
         if request.method.lower() == 'post'\
-                and resource_id not in self.values.keys():
+                and self.__resource_id__ not in self.values.keys():
             return getattr(self, 'save', None)(**self.values)
         resp = getattr(
             self,
