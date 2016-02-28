@@ -45,33 +45,44 @@ class Resource(object):
 
     def __init__(self, request, endpoint, values):
         super(Resource, self).__init__()
-        self.request = request
+        self.req = request
         self.endpoint = endpoint
         self.values = values
+        self.resp = Resp()
 
     def dispatch_request(self, request):
         func_method_map = {
-            'get': 'get',
+            'show': 'get',
             'update': 'put',
-            'delete': 'delete'
+            'destroy': 'delete'
         }
 
         if request.method.lower() == 'get'\
                 and self.__resource_id__ not in self.values.keys():
-            return getattr(self, 'query', None)(**self.values)
+            return getattr(self, 'index', None)(**self.values)
         if request.method.lower() == 'post'\
                 and self.__resource_id__ not in self.values.keys():
-            return getattr(self, 'save', None)(**self.values)
+            return getattr(self, 'create', None)(**self.values)
         resp = getattr(
             self,
             func_method_map.get(request.method.lower()),
             None)(**self.values)
-        if isinstance(resp, Response):
-            return resp
-        elif isinstance(resp, dict):
-            return Response(json.dumps(resp))
+        return resp
+
 
     def __call__(self, environ, start_response):
         request = Request(environ)
         response = self.dispatch_request(request)
         return response(environ, start_response)
+
+
+class JSONResp(object):
+
+    def json(self, data):
+        self.headers['Content-Type'] = 'application/json; charset=UTF-8'
+        self.set_data(json.dumps(data))
+        return self
+
+
+class Resp(Response, JSONResp):
+    """Full featured response object"""

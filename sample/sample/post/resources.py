@@ -7,28 +7,28 @@ class Post(Resource):
 
     __resource__ = 'post'
 
-    def query(self):
-        return Response('Hello query')
+    def index(self):
+        return self.resp.json({'data': 'Hello index'})
 
-    def save(self):
+    def create(self):
         return Response('Hello save')
 
-    def get(self, post_id):
+    def show(self, post_id):
         return Response(post_id)
 
     def update(self, post_id):
         return Response('Hello update')
 
-    def delete(self, post_id):
+    def destroy(self, post_id):
         return Response('Hello delete')
 
 class Tag(Post):
 
-    def query(self, post_id):
+    def index(self, post_id):
         return Response("Hello PostTag query"+post_id)
 
-    def save(self, post_id):
+    def create(self, post_id):
         return Response("Hello PostTag save"+post_id)
 
-    def get(self, tag_id):
+    def show(self, tag_id):
         return Response(tag_id)
