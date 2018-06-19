@@ -69,7 +69,6 @@ class Resource(object):
             None)(**self.values)
         return resp
 
-
     def __call__(self, environ, start_response):
         request = Request(environ)
         response = self.dispatch_request(request)
@@ -82,6 +81,12 @@ class JSONResp(object):
         self.headers['Content-Type'] = 'application/json; charset=UTF-8'
         self.set_data(json.dumps(data))
         return self
+
+
+class HTMLResp(object):
+
+    def html(self, template_name, **context):
+        pass
 
 
 class Resp(Response, JSONResp):
